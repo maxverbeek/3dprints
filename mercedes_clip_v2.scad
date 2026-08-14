@@ -1,8 +1,9 @@
 // Mercedes Sprinter paperwork clip — V2, tuned for brittle PLA.
 // Based on mercedes_clip.scad (reverse-engineered from thing:4555576).
 // Changes vs v1:
-//  * hooks thickened OUTBOARD by hook_extra (inner faces + bore stay put,
-//    so the fit against the rod mounts is unchanged)
+//  * hooks thickened INBOARD by hook_extra — the outer faces (and with
+//    them the outer edge-to-edge span of 34.9mm that the dash recess
+//    constrains) and the bore stay exactly where the original has them
 //  * U-slots through the plate beside each hook: the hook rides on a long
 //    plate tongue, so it flexes over ~7mm instead of ~2mm (softer snap,
 //    less peak stress) while being thicker
@@ -39,16 +40,17 @@ bar_hw    = 4.2;     // barrel half width; also outer stadium radius
 bar_arc_c = 4.55;    // height of the stadium arc center (crown at 8.75)
 bar_th    = 2.0;     // barrel thickness along the rod
 bar1_y    = [16.5, 18.5];   // top barrel extent (STL z)
-mir_y     = 1.05;    // bottom barrel = mirror of top about this y
+mir_y     = 1.0;     // bottom barrel = mirror of top about this y
+                     // (outer faces 18.5 / -16.5: span 35.0, as original)
 // ---------- V2 flexibility mods ----------
-hook_extra = 0.6;   // extra hook thickness, added on the outboard side
+hook_extra = 0.6;   // extra hook thickness, added on the inboard side
 slot_w     = 1.2;   // width of the flex slots beside each hook
 slot_root  = 12;    // slots run from the rim inward to this y; smaller =
                     // longer tongue = softer snap (v1 root was ~16.5)
 
 // outboard countersink (lead-in) cone: z(rho) = cs_apex - cs_slope*rho
 // apex sits 0.5 beyond the outboard face
-cs_apex  = bar1_y[1] + hook_extra + 0.5;
+cs_apex  = bar1_y[1] + 0.5;
 cs_slope = 0.4;
 cs_hw    = 3.2;      // countersink limited to |x - bar_cx| < cs_hw
 
@@ -165,9 +167,9 @@ module back_features() {
         union() { ladder(); right_side(); }
         envelope();
     }
-    barrel(bar1_y[0], bar1_y[1] + hook_extra);
+    barrel(bar1_y[0] - hook_extra, bar1_y[1]);
     translate([0, 2*mir_y, 0]) mirror([0,1,0])
-        barrel(bar1_y[0], bar1_y[1] + hook_extra);
+        barrel(bar1_y[0] - hook_extra, bar1_y[1]);
 }
 
 // through-slots beside each hook, open at the rim: the hook + its strip
@@ -188,5 +190,7 @@ module as_stl() rotate([-90,0,0]) mirror([0,1,0]) children();
 //          (dome skirt is <=42 deg, rests on the flat 16mm center)
 orient = "print";
 
-if (orient == "print") clip();
+// the model frame is chirally mirrored vs the real part (the y axis holds
+// negated STL z), so the print orientation needs a mirror to come out right
+if (orient == "print") mirror([0,1,0]) clip();
 else as_stl() clip();
